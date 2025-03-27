@@ -18,6 +18,7 @@ module SoilWaterMainMod
   use RunoffSubSurfaceGroundWaterMod,    only : RunoffSubSurfaceGroundWater
   use RunoffSubSurfaceDrainageMod,       only : RunoffSubSurfaceDrainage
   use RunoffSubSurfaceShallowMmfMod,     only : RunoffSubSurfaceShallowWaterMMF
+  use RunoffSubSurfacePeatlandMod,       only : RunoffSubSurfacePeatland
   use SoilWaterDiffusionRichardsMod,     only : SoilWaterDiffusionRichards
   use SoilMoistureSolverMod,             only : SoilMoistureSolver
   use TileDrainageSimpleMod,             only : TileDrainageSimple
@@ -33,6 +34,7 @@ contains
 ! Original Noah-MP subroutine: SOILWATER
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! Option=9; RunoffSubSurfacePeatlandMod added by Chakraborty & Bechtold (2025)
 ! -------------------------------------------------------------------------
 
     implicit none
@@ -135,11 +137,15 @@ contains
 
     ! subsurface runoff for runoff scheme option 2
     if ( OptRunoffSubsurface == 2 ) call RunoffSubSurfaceEquiWaterTable(noahmp)
+    
+    ! Peatland-specific scheme
+    if ( OptRunoffSubsurface == 9 ) call RunoffSubSurfacePeatland(noahmp) 
 
     ! jref impermable surface at urban
     if ( FlagUrban .eqv. .true. ) SoilImpervFrac(1) = 0.95
 
     ! surface runoff and infiltration rate using different schemes
+    ! MB: Alternative idea which will produce the same output as PEATCLSM: 
     if ( OptRunoffSurface == 1 ) call RunoffSurfaceTopModelGrd(noahmp)
     if ( OptRunoffSurface == 2 ) call RunoffSurfaceTopModelEqui(noahmp)
     if ( OptRunoffSurface == 3 ) call RunoffSurfaceFreeDrain(noahmp,SoilTimeStep)
@@ -148,6 +154,11 @@ contains
     if ( OptRunoffSurface == 6 ) call RunoffSurfaceVIC(noahmp,SoilTimeStep)
     if ( OptRunoffSurface == 7 ) call RunoffSurfaceXinAnJiang(noahmp,SoilTimeStep)
     if ( OptRunoffSurface == 8 ) call RunoffSurfaceDynamicVic(noahmp,SoilTimeStep,InfilSfcAcc)
+    
+    ! MB: We add RunoffSurface to the water that needs to infiltrate:
+    if ( OptRunoffSubsurface == 9 ) then
+       InfilRateSfc = InfilRateSfc + RunoffSurface / SoilTimeStep ! division because units between InfilRateSfc and RunoffSurface differ
+    endif
 
     ! determine iteration times  to solve soil water diffusion and moisture
     NumIterSoilWat = 3
@@ -167,7 +178,12 @@ contains
           if ( OptRunoffSurface == 6 ) call RunoffSurfaceVIC(noahmp,TimeStepFine)
           if ( OptRunoffSurface == 7 ) call RunoffSurfaceXinAnJiang(noahmp,TimeStepFine)
           if ( OptRunoffSurface == 8 ) call RunoffSurfaceDynamicVic(noahmp,TimeStepFine,InfilSfcAcc)
+          ! MB: Again, we add any potential new RunoffSurface to the water that needs to infiltrate:
+          if ( OptRunoffSubsurface == 9 ) then
+               InfilRateSfc = InfilRateSfc + RunoffSurface / SoilTimeStep ! division because units between InfilRateSfc and RunoffSurface differ
+          endif
        endif
+       ! MB: Here the higher InfilRateSfc will be redistributed as usual
        call SoilWaterDiffusionRichards(noahmp, MatLeft1, MatLeft2, MatLeft3, MatRight)
        call SoilMoistureSolver(noahmp, TimeStepFine, MatLeft1, MatLeft2, MatLeft3, MatRight)
        SoilSatExcAcc    = SoilSatExcAcc + SoilSaturationExcess

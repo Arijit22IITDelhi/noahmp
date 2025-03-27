@@ -120,7 +120,9 @@ contains
                                       TranspWatLossSoilMean(LoopInd)
        else
           SoilThickTmp(LoopInd) = (DepthSoilLayer(LoopInd-1) - DepthSoilLayer(LoopInd))
-          if ( (OptRunoffSubsurface == 1) .or. (OptRunoffSubsurface == 2) ) then
+          ! MB: For peatlands we don't want to lose water through the bottom ... instead it should raise the water level
+          ! using the equilibrium approach that is also used in RunoffSubsurfaceOption 2
+          if ( (OptRunoffSubsurface == 1) .or. (OptRunoffSubsurface == 2) .or. (OptRunoffSubsurface == 9)) then
              DrainSoilBot = 0.0
           endif
           if ( (OptRunoffSubsurface == 3) .or. (OptRunoffSubsurface == 6) .or. &

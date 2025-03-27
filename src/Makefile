@@ -25,6 +25,7 @@ OBJS = ConstantDefineMod.o \
        MatrixSolverTriDiagonalMod.o \
        RunoffSubSurfaceDrainageMod.o \
        RunoffSubSurfaceEquiWaterTableMod.o \
+       RunoffSubSurfacePeatlandMod.o \
        RunoffSubSurfaceGroundWaterMod.o \
        RunoffSubSurfaceShallowMmfMod.o \
        RunoffSurfaceBatsMod.o \
@@ -180,6 +181,7 @@ IrrigationMicroMod.o:                 ../utility/Machine.o NoahmpVarType.o Const
                                       IrrigationInfilPhilipMod.o
 MatrixSolverTriDiagonalMod.o:         ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 RunoffSubSurfaceDrainageMod.o:        ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
+RunoffSubSurfacePeatlandMod.o:        ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 RunoffSubSurfaceEquiWaterTableMod.o:  ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       WaterTableEquilibriumMod.o
 RunoffSubSurfaceGroundWaterMod.o:     ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
@@ -228,7 +230,7 @@ SoilWaterMainMod.o:                   ../utility/Machine.o NoahmpVarType.o Const
                                       RunoffSurfaceFreeDrainMod.o RunoffSurfaceBatsMod.o \
                                       RunoffSurfaceTopModelMmfMod.o RunoffSurfaceVicMod.o \
                                       RunoffSurfaceXinAnJiangMod.o RunoffSurfaceDynamicVicMod.o \
-                                      RunoffSubSurfaceEquiWaterTableMod.o RunoffSubSurfaceGroundWaterMod.o \
+                                      RunoffSubSurfaceEquiWaterTableMod.o RunoffSubSurfacePeatlandMod.o RunoffSubSurfaceGroundWaterMod.o \
                                       RunoffSubSurfaceDrainageMod.o RunoffSubSurfaceShallowMmfMod.o \
                                       SoilWaterDiffusionRichardsMod.o SoilMoistureSolverMod.o \
                                       TileDrainageSimpleMod.o TileDrainageHooghoudtMod.o
@@ -351,4 +353,3 @@ SurfaceEnergyFluxGlacierMod.o:           ../utility/Machine.o NoahmpVarType.o Co
                                          VaporPressureSaturationMod.o ResistanceBareGroundMostMod.o
 SurfaceRadiationGlacierMod.o:            ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 WaterMainGlacierMod.o:                   ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o SnowWaterMainGlacierMod.o
-
