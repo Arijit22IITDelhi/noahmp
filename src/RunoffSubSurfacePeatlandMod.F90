@@ -32,12 +32,16 @@ contains
     associate(                                                           &
               SoilImpervFracMax => noahmp%water%state%SoilImpervFracMax ,& ! in,    maximum soil imperviousness fraction
               WaterTableDepth   => noahmp%water%state%WaterTableDepth   ,& ! out,   water table depth [m]
+              FSW_change         => noahmp%water%state%FSW_change        ,& ! inout, 
               RunoffSubsurface  => noahmp%water%flux%RunoffSubsurface    & ! out,   subsurface runoff [mm/s] 
              )
 ! ----------------------------------------------------------------------
 
     ! Compute equilibrium water table depth
-    call WaterTableEquilibrium(noahmp)
+    ! For very shallow water table detph, use PEATCLSM approximation outside of this routine
+    if (WaterTableDepth>0.1) then
+       call WaterTableEquilibrium(noahmp)
+    endif
 
     ! ------------------------------------------
     ! Option 9: Ivanov-based Peatland Runoff Scheme (Chakraborty & Bechtold, 2025)
@@ -57,6 +61,9 @@ contains
 
     ! Compute subsurface runoff using Peatland-specific equation
     RunoffSubsurface = (1.0_dp - SoilImpervFracMax) * BFLOW
+    
+    ! Set FSW_change to zero for following calculations in SoilWaterMain and WaterBalanceError Check
+    FSW_change = 0.0
 
     end associate
 

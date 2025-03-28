@@ -61,6 +61,9 @@ contains
               SoilMoistureToWT          => noahmp%water%state%SoilMoistureToWT            ,& ! in,  soil moisture between bottom of the soil and the water table
               SoilWatConductivity       => noahmp%water%state%SoilWatConductivity         ,& ! out, soil hydraulic conductivity [m/s]
               SoilWatDiffusivity        => noahmp%water%state%SoilWatDiffusivity          ,& ! out, soil water diffusivity [m2/s]
+              FSW_change                => noahmp%water%state%FSW_change                  ,& ! inout,   surface storage change [mm]
+              f_soil                    => noahmp%water%state%f_soil                      ,& ! inout, fraction of flux in and out of soil [-]
+              AR1                       => noahmp%water%state%AR1                         ,& ! inout, fraction of flux in and out of soil [-]
               DrainSoilBot              => noahmp%water%flux%DrainSoilBot                  & ! out, soil bottom drainage [m/s]
              )
 ! ----------------------------------------------------------------------
@@ -110,6 +113,14 @@ contains
           SoilWaterGrad(LoopInd)    = 2.0 * (SoilMoistureTmp(LoopInd)-SoilMoistureTmp(LoopInd+1)) / DepthSnowSoilTmp
           WaterExcess(LoopInd)      = SoilWatDiffusivity(LoopInd)*SoilWaterGrad(LoopInd) + SoilWatConductivity(LoopInd) - &
                                       InfilRateSfc + TranspWatLossSoilMean(LoopInd) + EvapSoilSfcLiqMean
+          if (OptRunoffSubsurface == 9) then
+             if (f_soil == 0) then
+                WaterExcess(LoopInd) = 0.0
+             else
+                WaterExcess(LoopInd)      = SoilWatDiffusivity(LoopInd)*SoilWaterGrad(LoopInd) + SoilWatConductivity(LoopInd) - &
+                                            InfilRateSfc + TranspWatLossSoilMean(LoopInd) + f_soil*EvapSoilSfcLiqMean
+             endif
+          endif
        else if ( LoopInd < NumSoilLayer ) then
           SoilThickTmp(LoopInd)     = (DepthSoilLayer(LoopInd-1) - DepthSoilLayer(LoopInd))
           DepthSnowSoilTmp          = (DepthSoilLayer(LoopInd-1) - DepthSoilLayer(LoopInd+1))
@@ -118,6 +129,15 @@ contains
           WaterExcess(LoopInd)      = SoilWatDiffusivity(LoopInd)*SoilWaterGrad(LoopInd) + SoilWatConductivity(LoopInd) - &
                                       SoilWatDiffusivity(LoopInd-1)*SoilWaterGrad(LoopInd-1) - SoilWatConductivity(LoopInd-1) + &
                                       TranspWatLossSoilMean(LoopInd)
+          if (OptRunoffSubsurface == 9) then
+             if (f_soil == 0) then
+                WaterExcess(LoopInd) = 0.0
+             else
+                WaterExcess(LoopInd)      = SoilWatDiffusivity(LoopInd)*SoilWaterGrad(LoopInd) + SoilWatConductivity(LoopInd) - &
+                                      SoilWatDiffusivity(LoopInd-1)*SoilWaterGrad(LoopInd-1) - SoilWatConductivity(LoopInd-1) + &
+                                      f_soil*TranspWatLossSoilMean(LoopInd)
+             endif
+          endif
        else
           SoilThickTmp(LoopInd) = (DepthSoilLayer(LoopInd-1) - DepthSoilLayer(LoopInd))
           ! MB: For peatlands we don't want to lose water through the bottom ... instead it should raise the water level
@@ -147,6 +167,14 @@ contains
           endif
           WaterExcess(LoopInd) = -(SoilWatDiffusivity(LoopInd-1)*SoilWaterGrad(LoopInd-1)) - SoilWatConductivity(LoopInd-1) + &
                                  TranspWatLossSoilMean(LoopInd) + DrainSoilBot
+          if (OptRunoffSubsurface == 9) then
+             if (f_soil == 0) then
+                WaterExcess(LoopInd) = 0.0
+             else
+                WaterExcess(LoopInd) = -(SoilWatDiffusivity(LoopInd-1)*SoilWaterGrad(LoopInd-1)) - SoilWatConductivity(LoopInd-1) + &
+                                 f_soil*TranspWatLossSoilMean(LoopInd) + DrainSoilBot
+             endif
+          endif
        endif
     enddo
 

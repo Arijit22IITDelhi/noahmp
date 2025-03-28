@@ -19,6 +19,7 @@ module SoilWaterMainMod
   use RunoffSubSurfaceDrainageMod,       only : RunoffSubSurfaceDrainage
   use RunoffSubSurfaceShallowMmfMod,     only : RunoffSubSurfaceShallowWaterMMF
   use RunoffSubSurfacePeatlandMod,       only : RunoffSubSurfacePeatland
+  use MicroTopoCorrectionMod,            only : MicroTopoCorrection
   use SoilWaterDiffusionRichardsMod,     only : SoilWaterDiffusionRichards
   use SoilMoistureSolverMod,             only : SoilMoistureSolver
   use TileDrainageSimpleMod,             only : TileDrainageSimple
@@ -82,6 +83,9 @@ contains
               RunoffSubsurface       => noahmp%water%flux%RunoffSubsurface          ,& ! out,   subsurface runoff [mm per soil timestep] 
               InfilRateSfc           => noahmp%water%flux%InfilRateSfc              ,& ! out,   infiltration rate at surface [m/s]
               TileDrain              => noahmp%water%flux%TileDrain                 ,& ! out,   tile drainage [mm per soil timestep]
+              Transpiration          => noahmp%water%flux%Transpiration             ,& ! in,    transpiration rate [mm/s]
+              EvapGroundNet          => noahmp%water%flux%EvapGroundNet             ,& ! in,    net ground (soil/snow) evaporation [mm/s]
+              WaterTableDepth        => noahmp%water%state%WaterTableDepth          ,& ! out,   water table depth [m]
               SoilImpervFracMax      => noahmp%water%state%SoilImpervFracMax        ,& ! out,   maximum soil imperviousness fraction
               SoilWatConductivity    => noahmp%water%state%SoilWatConductivity      ,& ! out,   soil hydraulic conductivity [m/s]
               SoilEffPorosity        => noahmp%water%state%SoilEffPorosity          ,& ! out,   soil effective porosity [m3/m3]
@@ -89,7 +93,10 @@ contains
               SoilIceFrac            => noahmp%water%state%SoilIceFrac              ,& ! out,   ice fraction in frozen soil
               SoilSaturationExcess   => noahmp%water%state%SoilSaturationExcess     ,& ! out,   saturation excess of the total soil [m]
               SoilIceMax             => noahmp%water%state%SoilIceMax               ,& ! out,   maximum soil ice content [m3/m3]
-              SoilLiqWaterMin        => noahmp%water%state%SoilLiqWaterMin           & ! out,   minimum soil liquid water content [m3/m3]
+              FSW_change             => noahmp%water%state%FSW_change               ,& ! inout,   surface storage change [mm]
+              AR1                    => noahmp%water%state%AR1                      ,& ! inout,   flooded fraction [-]
+              f_soil                 => noahmp%water%state%f_soil                   ,& ! inout, fraction of flux in and out of soil [-]
+              SoilLiqWaterMin        => noahmp%water%state%SoilLiqWaterMin          & ! out,   minimum soil liquid water content [m3/m3]
              )
 ! ----------------------------------------------------------------------
 
@@ -158,6 +165,7 @@ contains
     ! MB: We add RunoffSurface to the water that needs to infiltrate:
     if ( OptRunoffSubsurface == 9 ) then
        InfilRateSfc = InfilRateSfc + RunoffSurface / SoilTimeStep ! division because units between InfilRateSfc and RunoffSurface differ
+       RunoffSurface = 0.0
     endif
 
     ! determine iteration times  to solve soil water diffusion and moisture
@@ -181,9 +189,22 @@ contains
           ! MB: Again, we add any potential new RunoffSurface to the water that needs to infiltrate:
           if ( OptRunoffSubsurface == 9 ) then
                InfilRateSfc = InfilRateSfc + RunoffSurface / SoilTimeStep ! division because units between InfilRateSfc and RunoffSurface differ
+               call MicroTopoCorrection(noahmp)
+               FSW_change = FSW_change + (1-f_soil)*InfilRateSfc*SoilTimeStep
+               FSW_change = FSW_change - (1-f_soil)*EvapGroundNet*SoilTimeStep
+               FSW_change = FSW_change - (1-f_soil)*Transpiration*SoilTimeStep
+               if (f_soil == 0) then
+                  WaterTableDepth = WaterTableDepth - InfilRateSfc * SoilTimeStep / AR1
+                  InfilRateSfc = 0.0
+                  WaterTableDepth = WaterTableDepth + EvapGroundNet * SoilTimeStep / AR1
+                  WaterTableDepth = WaterTableDepth + Transpiration * SoilTimeStep / AR1
+               else !MB: WaterTableDepth change will be calculated with normal equilibrium approach in next time step
+                  InfilRateSfc = f_soil*InfilRateSfc
+               endif
           endif
        endif
-       ! MB: Here the higher InfilRateSfc will be redistributed as usual
+       
+       ! MB: Here the reduced InfilRateSfc will be redistributed as usual
        call SoilWaterDiffusionRichards(noahmp, MatLeft1, MatLeft2, MatLeft3, MatRight)
        call SoilMoistureSolver(noahmp, TimeStepFine, MatLeft1, MatLeft2, MatLeft3, MatRight)
        SoilSatExcAcc    = SoilSatExcAcc + SoilSaturationExcess
@@ -215,6 +236,26 @@ contains
                                   (SoilWatConductivity(LoopInd1)*ThicknessSnowSoilLayer(LoopInd1)) / SoilWatConductAcc
           SoilLiqWater(LoopInd1) = SoilLiqWater(LoopInd1) - WaterRemove / (ThicknessSnowSoilLayer(LoopInd1)*1000.0)
        enddo
+    endif
+
+    ! MB: also for peatlands, this is the moment to remove the runoff
+    if ( OptRunoffSubsurface == 9 ) then
+       if (f_soil>0.0) then
+          SoilWatConductAcc = 0.0
+          do LoopInd1 = 1, NumSoilLayer
+             SoilWatConductAcc = SoilWatConductAcc + SoilWatConductivity(LoopInd1) * ThicknessSnowSoilLayer(LoopInd1)
+          enddo
+          do LoopInd1 = 1, NumSoilLayer
+             WaterRemove            = RunoffSubsurface * SoilTimeStep * &
+                                     (SoilWatConductivity(LoopInd1)*ThicknessSnowSoilLayer(LoopInd1)) / SoilWatConductAcc
+             FSW_change = FSW_change - (1-f_soil)*WaterRemove
+             WaterRemove = f_soil*WaterRemove
+             SoilLiqWater(LoopInd1) = SoilLiqWater(LoopInd1) - WaterRemove / (ThicknessSnowSoilLayer(LoopInd1)*1000.0)
+          enddo
+       else
+          WaterTableDepth = WaterTableDepth + RunoffSubsurface * SoilTimeStep / AR1
+          FSW_change = FSW_change - (1-f_soil) * RunoffSubsurface * SoilTimeStep
+       endif
     endif
 
     ! Limit SoilLiqTmp to be greater than or equal to watmin.

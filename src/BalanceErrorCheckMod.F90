@@ -79,6 +79,7 @@ contains
               MainTimeStep            => noahmp%config%domain%MainTimeStep           ,& ! in,    main noahmp timestep [s]
               FlagCropland            => noahmp%config%domain%FlagCropland           ,& ! in,    flag to identify croplands
               FlagSoilProcess         => noahmp%config%domain%FlagSoilProcess        ,& ! in,    flag to calculate soil process
+              OptRunoffSubsurface     => noahmp%config%nmlist%OptRunoffSubsurface    ,& ! in,    options for subsurface runoff
               IrriFracThreshold       => noahmp%water%param%IrriFracThreshold        ,& ! in,    irrigation fraction parameter
               IrrigationFracGrid      => noahmp%water%state%IrrigationFracGrid       ,& ! in,    total input irrigation fraction
               WaterTableDepth         => noahmp%water%state%WaterTableDepth          ,& ! in,    water table depth [m]
@@ -103,6 +104,7 @@ contains
               EvapCanopyNetAcc        => noahmp%water%flux%EvapCanopyNetAcc          ,& ! inout, accumulated net canopy evaporation per soil timestep [mm]
               TranspirationAcc        => noahmp%water%flux%TranspirationAcc          ,& ! inout, accumulated transpiration per soil timestep [mm]
               EvapGroundNetAcc        => noahmp%water%flux%EvapGroundNetAcc          ,& ! inout, accumulated net ground evaporation per soil timestep [mm]
+              FSW_change              => noahmp%water%state%FSW_change               ,& ! in,   
               WaterStorageTotEnd      => noahmp%water%state%WaterStorageTotEnd       ,& ! out,   total water storage [mm] at the end
               WaterBalanceError       => noahmp%water%state%WaterBalanceError         & ! out,   water balance error [mm] per time step
              )
@@ -122,6 +124,9 @@ contains
        enddo
        ! accumualted water change (only for canopy and snow during non-soil timestep)
        SfcWaterTotChgAcc = SfcWaterTotChgAcc + (WaterStorageTotEnd - WaterStorageTotBeg)  ! snow, canopy, and soil water change
+       if ( OptRunoffSubsurface == 9 ) then
+           SfcWaterTotChgAcc = SfcWaterTotChgAcc + FSW_change
+       endif
        PrecipTotAcc      = PrecipTotAcc      + PrecipTotRefHeight * MainTimeStep          ! accumulated precip 
        EvapCanopyNetAcc  = EvapCanopyNetAcc  + EvapCanopyNet      * MainTimeStep          ! accumulated canopy evapo
        TranspirationAcc  = TranspirationAcc  + Transpiration      * MainTimeStep          ! accumulated transpiration
@@ -131,7 +136,7 @@ contains
        if ( FlagSoilProcess .eqv. .true. ) then
           WaterBalanceError = SfcWaterTotChgAcc - (PrecipTotAcc + IrrigationRateMicro*1000.0 + IrrigationRateFlood*1000.0 - &
                               EvapCanopyNetAcc - TranspirationAcc - EvapGroundNetAcc - RunoffSurface - RunoffSubsurface -   &
-                              TileDrain)
+                              TileDrain )
 #ifndef WRF_HYDRO
           if ( abs(WaterBalanceError) > 0.1 ) then
              if ( WaterBalanceError > 0 ) then

@@ -194,6 +194,9 @@ contains
     noahmp%water%flux%IrriEvapLossSprinkler        = 0.0
     noahmp%water%flux%EvapIrriSprinkler            = 0.0
     noahmp%water%flux%TileDrain                    = 0.0
+    noahmp%water%state%FSW_change                  = 0.0
+    noahmp%water%state%f_soil                      = undefined_real
+    noahmp%water%state%AR1                         = undefined_real
 
     if ( .not. allocated(noahmp%water%flux%CompactionSnowAging) )   &
        allocate( noahmp%water%flux%CompactionSnowAging(-NumSnowLayerMax+1:0) )
