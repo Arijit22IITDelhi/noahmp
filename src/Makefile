@@ -26,6 +26,7 @@ OBJS = ConstantDefineMod.o \
        RunoffSubSurfaceDrainageMod.o \
        RunoffSubSurfaceEquiWaterTableMod.o \
        RunoffSubSurfacePeatlandMod.o \
+       MicroTopoCorrectionMod.o \
        RunoffSubSurfaceGroundWaterMod.o \
        RunoffSubSurfaceShallowMmfMod.o \
        RunoffSurfaceBatsMod.o \
