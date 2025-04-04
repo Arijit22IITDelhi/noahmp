@@ -164,7 +164,7 @@ contains
     
     ! MB: We add RunoffSurface to the water that needs to infiltrate:
     if ( OptRunoffSubsurface == 9 ) then
-       InfilRateSfc = InfilRateSfc + RunoffSurface / SoilTimeStep ! division because units between InfilRateSfc and RunoffSurface differ
+       InfilRateSfc = InfilRateSfc + RunoffSurface / SoilTimeStep / 1000.0 ! division because units between InfilRateSfc and RunoffSurface differ
        RunoffSurface = 0.0
     endif
 
@@ -188,16 +188,16 @@ contains
           if ( OptRunoffSurface == 8 ) call RunoffSurfaceDynamicVic(noahmp,TimeStepFine,InfilSfcAcc)
           ! MB: Again, we add any potential new RunoffSurface to the water that needs to infiltrate:
           if ( OptRunoffSubsurface == 9 ) then
-               InfilRateSfc = InfilRateSfc + RunoffSurface / SoilTimeStep ! division because units between InfilRateSfc and RunoffSurface differ
+               InfilRateSfc = InfilRateSfc + RunoffSurface / SoilTimeStep / 1000.0 ! division because units between InfilRateSfc and RunoffSurface differ
                call MicroTopoCorrection(noahmp)
-               FSW_change = FSW_change + (1-f_soil)*InfilRateSfc*SoilTimeStep
+               FSW_change = FSW_change + (1-f_soil)*InfilRateSfc*SoilTimeStep*1000.0
                FSW_change = FSW_change - (1-f_soil)*EvapGroundNet*SoilTimeStep
                FSW_change = FSW_change - (1-f_soil)*Transpiration*SoilTimeStep
                if (f_soil == 0) then
                   WaterTableDepth = WaterTableDepth - InfilRateSfc * SoilTimeStep / AR1
                   InfilRateSfc = 0.0
-                  WaterTableDepth = WaterTableDepth + EvapGroundNet * SoilTimeStep / AR1
-                  WaterTableDepth = WaterTableDepth + Transpiration * SoilTimeStep / AR1
+                  WaterTableDepth = WaterTableDepth + EvapGroundNet * SoilTimeStep / AR1 / 1000.0
+                  WaterTableDepth = WaterTableDepth + Transpiration * SoilTimeStep / AR1 / 1000.0
                else !MB: WaterTableDepth change will be calculated with normal equilibrium approach in next time step
                   InfilRateSfc = f_soil*InfilRateSfc
                endif
@@ -253,7 +253,7 @@ contains
              SoilLiqWater(LoopInd1) = SoilLiqWater(LoopInd1) - WaterRemove / (ThicknessSnowSoilLayer(LoopInd1)*1000.0)
           enddo
        else
-          WaterTableDepth = WaterTableDepth + RunoffSubsurface * SoilTimeStep / AR1
+          WaterTableDepth = WaterTableDepth + RunoffSubsurface * SoilTimeStep / AR1 / 1000
           FSW_change = FSW_change - (1-f_soil) * RunoffSubsurface * SoilTimeStep
        endif
     endif
