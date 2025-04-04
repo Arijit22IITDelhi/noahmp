@@ -183,6 +183,7 @@ IrrigationMicroMod.o:                 ../utility/Machine.o NoahmpVarType.o Const
 MatrixSolverTriDiagonalMod.o:         ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 RunoffSubSurfaceDrainageMod.o:        ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 RunoffSubSurfacePeatlandMod.o:        ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
+MicroTopoCorrectionMod.o:             ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 RunoffSubSurfaceEquiWaterTableMod.o:  ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
                                       WaterTableEquilibriumMod.o
 RunoffSubSurfaceGroundWaterMod.o:     ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
@@ -232,7 +233,7 @@ SoilWaterMainMod.o:                   ../utility/Machine.o NoahmpVarType.o Const
                                       RunoffSurfaceTopModelMmfMod.o RunoffSurfaceVicMod.o \
                                       RunoffSurfaceXinAnJiangMod.o RunoffSurfaceDynamicVicMod.o \
                                       RunoffSubSurfaceEquiWaterTableMod.o RunoffSubSurfacePeatlandMod.o RunoffSubSurfaceGroundWaterMod.o \
-                                      RunoffSubSurfaceDrainageMod.o RunoffSubSurfaceShallowMmfMod.o \
+                                      MicroTopoCorrectionMod.o RunoffSubSurfaceDrainageMod.o RunoffSubSurfaceShallowMmfMod.o \
                                       SoilWaterDiffusionRichardsMod.o SoilMoistureSolverMod.o \
                                       TileDrainageSimpleMod.o TileDrainageHooghoudtMod.o
 TileDrainageEquiDepthMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
