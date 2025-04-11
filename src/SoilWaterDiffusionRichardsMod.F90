@@ -114,7 +114,7 @@ contains
           WaterExcess(LoopInd)      = SoilWatDiffusivity(LoopInd)*SoilWaterGrad(LoopInd) + SoilWatConductivity(LoopInd) - &
                                       InfilRateSfc + TranspWatLossSoilMean(LoopInd) + EvapSoilSfcLiqMean
           if (OptRunoffSubsurface == 9) then
-             if (f_soil == 0) then
+             if (f_soil < 0.000001) then
                 WaterExcess(LoopInd) = 0.0
              else
                 WaterExcess(LoopInd)      = SoilWatDiffusivity(LoopInd)*SoilWaterGrad(LoopInd) + SoilWatConductivity(LoopInd) - &
@@ -130,7 +130,7 @@ contains
                                       SoilWatDiffusivity(LoopInd-1)*SoilWaterGrad(LoopInd-1) - SoilWatConductivity(LoopInd-1) + &
                                       TranspWatLossSoilMean(LoopInd)
           if (OptRunoffSubsurface == 9) then
-             if (f_soil == 0) then
+             if (f_soil < 0.000001) then
                 WaterExcess(LoopInd) = 0.0
              else
                 WaterExcess(LoopInd)      = SoilWatDiffusivity(LoopInd)*SoilWaterGrad(LoopInd) + SoilWatConductivity(LoopInd) - &
@@ -168,7 +168,7 @@ contains
           WaterExcess(LoopInd) = -(SoilWatDiffusivity(LoopInd-1)*SoilWaterGrad(LoopInd-1)) - SoilWatConductivity(LoopInd-1) + &
                                  TranspWatLossSoilMean(LoopInd) + DrainSoilBot
           if (OptRunoffSubsurface == 9) then
-             if (f_soil == 0) then
+             if (f_soil < 0.000001) then
                 WaterExcess(LoopInd) = 0.0
              else
                 WaterExcess(LoopInd) = -(SoilWatDiffusivity(LoopInd-1)*SoilWaterGrad(LoopInd-1)) - SoilWatConductivity(LoopInd-1) + &

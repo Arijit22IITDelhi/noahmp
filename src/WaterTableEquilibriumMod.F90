@@ -24,7 +24,7 @@ contains
 
 ! local variable
     integer                          :: IndSoil                           ! do-loop index
-    integer, parameter               :: NumSoilFineLy = 100               ! no. of fine soil layers of 6m soil
+    integer, parameter               :: NumSoilFineLy = 1000               ! no. of fine soil layers of 6m soil
     real(kind=kind_noahmp)           :: WatDeficitCoarse                  ! water deficit from coarse (4-L) soil moisture profile
     real(kind=kind_noahmp)           :: WatDeficitFine                    ! water deficit from fine (100-L) soil moisture profile
     real(kind=kind_noahmp)           :: ThickSoilFineLy                   ! layer thickness of the 100-L soil layers to 6.0 m
@@ -63,7 +63,7 @@ contains
        TmpVar         = 1.0 + (WaterTableDepth - DepthSoilFineLy(IndSoil)) / SoilMatPotentialSat(1)
        WatDeficitFine = WatDeficitFine + SoilMoistureSat(1) * &
                                          (1.0 - TmpVar**(-1.0/SoilExpCoeffB(1))) * ThickSoilFineLy
-       if ( abs(WatDeficitFine-WatDeficitCoarse) <= 0.01 ) then
+       if ( abs(WatDeficitFine-WatDeficitCoarse) <= 0.001 ) then
           WaterTableDepth = DepthSoilFineLy(IndSoil)
           exit
        endif

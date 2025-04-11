@@ -53,7 +53,7 @@ contains
     AR1 = (1.+ars1*(catdef))/(1.+ars2*(catdef)+ars3*(catdef)**2)
     
     if (WaterTableDepth>0.1) then
-        f_soil = (1.-AR1)*SySoil/(AR1+(1.-AR1)*SySoil)
+        f_soil = MAX(MIN(1.0,(1.-AR1)*SySoil/(AR1+(1.-AR1)*SySoil)),0.0)
     else
         f_soil = 0.0
     endif
