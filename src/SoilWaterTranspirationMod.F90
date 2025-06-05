@@ -2,6 +2,7 @@ module SoilWaterTranspirationMod
 
 !!! compute soil water transpiration factor that will be used for 
 !!! stomata resistance and evapotranspiration calculations
+!!! Includes peatland-specific drought and waterlogging stress conditions
 
   use Machine
   use NoahmpVarType
@@ -16,7 +17,8 @@ contains
 ! ------------------------ Code history -----------------------------------
 ! Original Noah-MP subroutine: None (embedded in ENERGY subroutine)
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
-! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! Refactored code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! Modified for Peatland transpiration and waterlogging stress: Chakraborty & Bechtold (2025)
 ! -------------------------------------------------------------------------
 
     implicit none
@@ -27,62 +29,94 @@ contains
 ! local variables
     integer                          :: IndSoil       ! loop index
     real(kind=kind_noahmp)           :: SoilWetFac    ! temporary variable
-    real(kind=kind_noahmp)           :: MinThr        ! minimum threshold to prevent divided by zero
+    real(kind=kind_noahmp)           :: MinThr        ! minimum threshold to prevent division by zero
+    real(kind=kind_noahmp)           :: F_wilt        ! PEAT-CLSM wilting stress based on WTD
+    real(kind=kind_noahmp)           :: F_log         ! PEAT-CLSM waterlogging stress factor (FOXY)
 
 ! --------------------------------------------------------------------
     associate(                                                                             &
-              SurfaceType               => noahmp%config%domain%SurfaceType               ,& ! in,  surface type 1-soil; 2-lake
-              ThicknessSnowSoilLayer    => noahmp%config%domain%ThicknessSnowSoilLayer    ,& ! in,  thickness of snow/soil layers [m]
-              DepthSoilLayer            => noahmp%config%domain%DepthSoilLayer            ,& ! in,  depth [m] of layer-bottom from soil surface
-              OptSoilWaterTranspiration => noahmp%config%nmlist%OptSoilWaterTranspiration ,& ! in,  option for soil moisture factor for stomatal resistance & ET
-              NumSoilLayerRoot          => noahmp%water%param%NumSoilLayerRoot            ,& ! in,  number of soil layers with root present
-              SoilMoistureWilt          => noahmp%water%param%SoilMoistureWilt            ,& ! in,  wilting point soil moisture [m3/m3]
-              SoilMoistureFieldCap      => noahmp%water%param%SoilMoistureFieldCap        ,& ! in,  reference soil moisture (field capacity) [m3/m3]
-              SoilMatPotentialWilt      => noahmp%water%param%SoilMatPotentialWilt        ,& ! in,  soil metric potential for wilting point [m]
-              SoilMatPotentialSat       => noahmp%water%param%SoilMatPotentialSat         ,& ! in,  saturated soil matric potential [m]
-              SoilMoistureSat           => noahmp%water%param%SoilMoistureSat             ,& ! in,  saturated value of soil moisture [m3/m3]
-              SoilExpCoeffB             => noahmp%water%param%SoilExpCoeffB               ,& ! in,  soil B parameter              
-              SoilLiqWater              => noahmp%water%state%SoilLiqWater                ,& ! in,  soil water content [m3/m3]
-              SoilTranspFac             => noahmp%water%state%SoilTranspFac               ,& ! out, soil water transpiration factor (0 to 1)
-              SoilTranspFacAcc          => noahmp%water%state%SoilTranspFacAcc            ,& ! out, accumulated soil water transpiration factor (0 to 1)
-              SoilMatPotential          => noahmp%water%state%SoilMatPotential             & ! out, soil matrix potential [m]
+              SurfaceType               => noahmp%config%domain%SurfaceType               ,&
+              ThicknessSnowSoilLayer    => noahmp%config%domain%ThicknessSnowSoilLayer    ,&
+              DepthSoilLayer            => noahmp%config%domain%DepthSoilLayer            ,&
+              OptSoilWaterTranspiration => noahmp%config%nmlist%OptSoilWaterTranspiration ,&
+              OptRunoffSubsurface       => noahmp%config%nmlist%OptRunoffSubsurface       ,&
+              NumSoilLayerRoot          => noahmp%water%param%NumSoilLayerRoot            ,&
+              SoilMoistureWilt          => noahmp%water%param%SoilMoistureWilt            ,&
+              SoilMoistureFieldCap      => noahmp%water%param%SoilMoistureFieldCap        ,&
+              SoilMatPotentialWilt      => noahmp%water%param%SoilMatPotentialWilt        ,&
+              SoilMatPotentialSat       => noahmp%water%param%SoilMatPotentialSat         ,&
+              SoilMoistureSat           => noahmp%water%param%SoilMoistureSat             ,&
+              SoilExpCoeffB             => noahmp%water%param%SoilExpCoeffB               ,&
+              SoilLiqWater              => noahmp%water%state%SoilLiqWater                ,&
+              SoilTranspFac             => noahmp%water%state%SoilTranspFac               ,&
+              SoilTranspFacAcc          => noahmp%water%state%SoilTranspFacAcc            ,&
+              SoilMatPotential          => noahmp%water%state%SoilMatPotential            ,&
+              WaterTableDepth           => noahmp%water%state%WaterTableDepth              &
              )
 ! ----------------------------------------------------------------------
 
-    ! soil moisture factor controlling stomatal resistance and evapotranspiration
     MinThr         = 1.0e-6
     SoilTranspFacAcc = 0.0
 
-    ! only for soil point
-    if ( SurfaceType ==1 ) then
+    ! Set peatland-specific transpiration option if runoff option is PEAT
+    if (OptRunoffSubsurface == 9) then
+       OptSoilWaterTranspiration = 4
+    endif
+
+    if ( SurfaceType == 1 ) then
+
        do IndSoil = 1, NumSoilLayerRoot
           if ( OptSoilWaterTranspiration == 1 ) then  ! Noah
-             SoilWetFac                = (SoilLiqWater(IndSoil) - SoilMoistureWilt(IndSoil)) / &
-                                         (SoilMoistureFieldCap(IndSoil) - SoilMoistureWilt(IndSoil))
-          endif
-          if ( OptSoilWaterTranspiration == 2 ) then  ! CLM
-             SoilMatPotential(IndSoil) = max(SoilMatPotentialWilt, -SoilMatPotentialSat(IndSoil) * &
-                                            (max(0.01,SoilLiqWater(IndSoil))/SoilMoistureSat(IndSoil)) ** &
-                                            (-SoilExpCoeffB(IndSoil)))
-             SoilWetFac                = (1.0 - SoilMatPotential(IndSoil)/SoilMatPotentialWilt) / &
-                                         (1.0 + SoilMatPotentialSat(IndSoil)/SoilMatPotentialWilt)
-          endif
-          if ( OptSoilWaterTranspiration == 3 ) then  ! SSiB
-             SoilMatPotential(IndSoil) = max(SoilMatPotentialWilt, -SoilMatPotentialSat(IndSoil) * &
-                                            (max(0.01,SoilLiqWater(IndSoil))/SoilMoistureSat(IndSoil)) ** &
-                                            (-SoilExpCoeffB(IndSoil)))
-             SoilWetFac                = 1.0 - exp(-5.8*(log(SoilMatPotentialWilt/SoilMatPotential(IndSoil))))
-          endif
-          SoilWetFac                   = min(1.0, max(0.0,SoilWetFac))
+             SoilWetFac = (SoilLiqWater(IndSoil) - SoilMoistureWilt(IndSoil)) / &
+                           (SoilMoistureFieldCap(IndSoil) - SoilMoistureWilt(IndSoil))
 
-          SoilTranspFac(IndSoil)       = max(MinThr, ThicknessSnowSoilLayer(IndSoil) / &
-                                            (-DepthSoilLayer(NumSoilLayerRoot)) * SoilWetFac)
-          SoilTranspFacAcc             = SoilTranspFacAcc + SoilTranspFac(IndSoil)
-       enddo
+          else if ( OptSoilWaterTranspiration == 2 ) then  ! CLM
+             SoilMatPotential(IndSoil) = max(SoilMatPotentialWilt, -SoilMatPotentialSat(IndSoil) * &
+                                            (max(0.01,SoilLiqWater(IndSoil))/SoilMoistureSat(IndSoil)) ** &
+                                            (-SoilExpCoeffB(IndSoil)))
+             SoilWetFac = (1.0 - SoilMatPotential(IndSoil)/SoilMatPotentialWilt) / &
+                           (1.0 + SoilMatPotentialSat(IndSoil)/SoilMatPotentialWilt)
+
+          else if ( OptSoilWaterTranspiration == 3 ) then  ! SSiB
+             SoilMatPotential(IndSoil) = max(SoilMatPotentialWilt, -SoilMatPotentialSat(IndSoil) * &
+                                            (max(0.01,SoilLiqWater(IndSoil))/SoilMoistureSat(IndSoil)) ** &
+                                            (-SoilExpCoeffB(IndSoil)))
+             SoilWetFac = 1.0 - exp(-5.8*(log(SoilMatPotentialWilt/SoilMatPotential(IndSoil))))
+
+          else if ( OptSoilWaterTranspiration == 4 ) then  ! PEAT-CLSM (drought + waterlogging stress)
+             ! Bechtold et al. (2019) uses negative WTD below ground, Noah-MP uses positive
+             if (WaterTableDepth < 0.3) then
+                F_wilt = 0.0
+             else if (WaterTableDepth >= 0.3 .and. WaterTableDepth < 1.15) then
+                F_wilt = 1.18 * WaterTableDepth - 0.35
+             else
+                F_wilt = 1.0
+             end if
+             F_wilt = max(0.0, min(1.0, F_wilt))
+
+             ! Apply waterlogging stress based only on WTD (no porosity condition)
+             if (WaterTableDepth < 0.29) then
+                F_log = 1.0 - max(0.0, min(0.95, (0.29 - WaterTableDepth) / 0.64))
+             else
+                F_log = 1.0
+             end if
+
+             ! Combine both drought and waterlogging stress factors
+             SoilWetFac = (1.0 - F_wilt) * F_log
+
+          end if
+
+          SoilWetFac = min(1.0, max(0.0, SoilWetFac))
+
+          SoilTranspFac(IndSoil) = max(MinThr, ThicknessSnowSoilLayer(IndSoil) / &
+                                       (-DepthSoilLayer(NumSoilLayerRoot)) * SoilWetFac)
+          SoilTranspFacAcc = SoilTranspFacAcc + SoilTranspFac(IndSoil)
+       end do
 
        SoilTranspFacAcc = max(MinThr, SoilTranspFacAcc)
        SoilTranspFac(1:NumSoilLayerRoot) = SoilTranspFac(1:NumSoilLayerRoot) / SoilTranspFacAcc
-    endif
+
+    end if
 
     end associate
 
