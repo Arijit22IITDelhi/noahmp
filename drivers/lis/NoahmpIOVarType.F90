@@ -38,6 +38,7 @@ module NoahmpIOVarType
     integer                                                ::  IOPT_BTR            ! soil moisture factor for stomatal resistance (1-> Noah; 2-> CLM; 3-> SSiB)
     integer                                                ::  IOPT_RUNSRF         ! surface runoff and groundwater (1->SIMGM; 2->SIMTOP; 3->Schaake96; 4->BATS)
     integer                                                ::  IOPT_RUNSUB         ! subsurface runoff option
+    integer                                                ::  IOPT_PEAT           ! peatland physics option (Chakraborty et al., 2025)
     integer                                                ::  IOPT_SFC            ! surface layer drag coeff (CH & CM) (1->M-O; 2->Chen97)
     integer                                                ::  IOPT_FRZ            ! supercooled liquid water (1-> NY06; 2->Koren99)
     integer                                                ::  IOPT_INF            ! frozen soil permeability (1-> NY06; 2->Koren99)

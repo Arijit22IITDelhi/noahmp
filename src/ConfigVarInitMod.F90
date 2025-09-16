@@ -37,6 +37,7 @@ contains
     noahmp%config%nmlist%OptSoilSupercoolWater       = undefined_int
     noahmp%config%nmlist%OptRunoffSurface            = undefined_int
     noahmp%config%nmlist%OptRunoffSubsurface         = undefined_int
+    noahmp%config%nmlist%OptPeatlandPhysics          = undefined_int
     noahmp%config%nmlist%OptSoilPermeabilityFrozen   = undefined_int
     noahmp%config%nmlist%OptDynVicInfiltration       = undefined_int
     noahmp%config%nmlist%OptTileDrainage             = undefined_int

@@ -36,6 +36,8 @@ contains
               SnowWaterEquiv         => noahmp%water%state%SnowWaterEquiv           ,& ! in,  snow water equivalent [mm]
               SoilMoisture           => noahmp%water%state%SoilMoisture             ,& ! in,  total soil moisture [m3/m3]
               WaterStorageAquifer    => noahmp%water%state%WaterStorageAquifer      ,& ! in,  water storage in aquifer [mm]
+              OptRunoffSubsurface    => noahmp%config%nmlist%OptRunoffSubsurface    ,& ! in,    options for subsurface runoff
+              OptPeatlandPhysics     => noahmp%config%nmlist%OptPeatlandPhysics     ,& ! in,    options for peatland physics
               WaterStorageTotBeg     => noahmp%water%state%WaterStorageTotBeg        & ! out, total water storage [mm] at the beginning
              )
 ! ----------------------------------------------------------------------
@@ -80,6 +82,7 @@ contains
               FlagCropland            => noahmp%config%domain%FlagCropland           ,& ! in,    flag to identify croplands
               FlagSoilProcess         => noahmp%config%domain%FlagSoilProcess        ,& ! in,    flag to calculate soil process
               OptRunoffSubsurface     => noahmp%config%nmlist%OptRunoffSubsurface    ,& ! in,    options for subsurface runoff
+              OptPeatlandPhysics      => noahmp%config%nmlist%OptPeatlandPhysics     ,& ! in,    options for peatland physics
               IrriFracThreshold       => noahmp%water%param%IrriFracThreshold        ,& ! in,    irrigation fraction parameter
               IrrigationFracGrid      => noahmp%water%state%IrrigationFracGrid       ,& ! in,    total input irrigation fraction
               WaterTableDepth         => noahmp%water%state%WaterTableDepth          ,& ! in,    water table depth [m]
@@ -124,8 +127,9 @@ contains
        enddo
        ! accumualted water change (only for canopy and snow during non-soil timestep)
        SfcWaterTotChgAcc = SfcWaterTotChgAcc + (WaterStorageTotEnd - WaterStorageTotBeg)  ! snow, canopy, and soil water change
-       if ( OptRunoffSubsurface == 9 ) then
+       if ( OptPeatlandPhysics == 1 ) then
            SfcWaterTotChgAcc = SfcWaterTotChgAcc + FSW_change
+           write(*,*) "Checking Surface water storage: FSW_change"
        endif
        PrecipTotAcc      = PrecipTotAcc      + PrecipTotRefHeight * MainTimeStep          ! accumulated precip 
        EvapCanopyNetAcc  = EvapCanopyNetAcc  + EvapCanopyNet      * MainTimeStep          ! accumulated canopy evapo
@@ -138,7 +142,7 @@ contains
                               EvapCanopyNetAcc - TranspirationAcc - EvapGroundNetAcc - RunoffSurface - RunoffSubsurface -   &
                               TileDrain )
 #ifndef WRF_HYDRO
-          if ( abs(WaterBalanceError) > 0.1 ) then
+          if ( abs(WaterBalanceError) > 0.1 ) then  ! 0.1
              if ( WaterBalanceError > 0 ) then
                 write(*,*) "The model is gaining water (WaterBalanceError is positive)"
              else

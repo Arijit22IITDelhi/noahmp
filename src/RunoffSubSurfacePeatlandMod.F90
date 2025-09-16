@@ -5,7 +5,7 @@ module RunoffSubSurfacePeatlandMod
   use Machine
   use NoahmpVarType
   use ConstantDefineMod
-  use WaterTableEquilibriumMod, only : WaterTableEquilibrium
+  use WaterTableEquilibriumPeatMod, only : WaterTableEquilibriumPeat
 
   implicit none
 
@@ -40,7 +40,7 @@ contains
     ! Compute equilibrium water table depth
     ! For very shallow water table detph, use PEATCLSM approximation outside of this routine
     if (WaterTableDepth>0.1) then
-       call WaterTableEquilibrium(noahmp)
+       call WaterTableEquilibriumPeat(noahmp)
     endif
 
     ! ------------------------------------------
@@ -53,7 +53,7 @@ contains
     v_slope = 1.5e-08_dp       ! Slope factor for runoff generation [unitless]
 
     ! Compute transmissivity function (Ta) [m^2/s]
-    Ta = (Ksz_zero * (24.5_dp + 100.0_dp * max(-0.244999_dp, WaterTableDepth))**(1.0_dp - m_Ivanov)) / &
+    Ta = (Ksz_zero * (24.5_dp + 100.0_dp * max(-0.2449_dp, WaterTableDepth))**(1.0_dp - m_Ivanov)) / &
          (100.0_dp * (m_Ivanov - 1.0_dp))
 
     ! Compute baseflow (BFLOW) in mm/s
@@ -61,6 +61,8 @@ contains
 
     ! Compute subsurface runoff using Peatland-specific equation
     RunoffSubsurface = (1.0_dp - SoilImpervFracMax) * BFLOW
+    
+    RunoffSubsurface = min(0.0002,RunoffSubSurface)
     
     ! Set FSW_change to zero for following calculations in SoilWaterMain and WaterBalanceError Check
     FSW_change = 0.0

@@ -83,6 +83,9 @@ module ConfigVarType
     integer :: OptRunoffSubsurface         ! options for drainage & subsurface runoff 
                                               ! 1~8: similar to runoff option, separated from original NoahMP runoff option
                                               ! currently tested & recommended the same option# as surface runoff (default)
+    integer :: OptPeatlandPhysics          ! options for turning on peatland physical process (Chakraborty et al., 2025)
+                                              ! 0 -> do not use peatland physics option
+                                              ! 1 -> turn on peatland physics option
     integer :: OptSoilPermeabilityFrozen   ! options for frozen soil permeability
                                               ! 1 -> linear effects, more permeable (default)
                                               ! 2 -> nonlinear effects, less permeable

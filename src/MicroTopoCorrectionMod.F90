@@ -5,7 +5,7 @@ module MicroTopoCorrectionMod
   use Machine
   use NoahmpVarType
   use ConstantDefineMod
-  use WaterTableEquilibriumMod, only : WaterTableEquilibrium
+  use WaterTableEquilibriumPeatMod,      only : WaterTableEquilibriumPeat
 
   implicit none
 

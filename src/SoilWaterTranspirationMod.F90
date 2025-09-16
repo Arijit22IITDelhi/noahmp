@@ -7,6 +7,7 @@ module SoilWaterTranspirationMod
   use Machine
   use NoahmpVarType
   use ConstantDefineMod
+  use PeatlandPhysicsMod,                only : ApplyPeatlandPhysics
 
   implicit none
 
@@ -40,6 +41,7 @@ contains
               DepthSoilLayer            => noahmp%config%domain%DepthSoilLayer            ,&
               OptSoilWaterTranspiration => noahmp%config%nmlist%OptSoilWaterTranspiration ,&
               OptRunoffSubsurface       => noahmp%config%nmlist%OptRunoffSubsurface       ,&
+              OptPeatlandPhysics        => noahmp%config%nmlist%OptPeatlandPhysics        ,& 
               NumSoilLayerRoot          => noahmp%water%param%NumSoilLayerRoot            ,&
               SoilMoistureWilt          => noahmp%water%param%SoilMoistureWilt            ,&
               SoilMoistureFieldCap      => noahmp%water%param%SoilMoistureFieldCap        ,&
@@ -59,7 +61,8 @@ contains
     SoilTranspFacAcc = 0.0
 
     ! Set peatland-specific transpiration option if runoff option is PEAT
-    if (OptRunoffSubsurface == 9) then
+    !if (OptRunoffSubsurface == 9) then
+    if ( OptPeatlandPhysics == 1 ) then
        OptSoilWaterTranspiration = 4
     endif
 

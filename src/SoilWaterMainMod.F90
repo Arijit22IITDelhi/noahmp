@@ -2,6 +2,7 @@ module SoilWaterMainMod
 
 !!! Main soil water module including all soil water processes & update soil moisture
 !!! surface runoff, infiltration, soil water diffusion, subsurface runoff, tile drainage
+!!! added peatland specific options (Chakraborty et al., 2025)
 
   use Machine
   use NoahmpVarType
@@ -20,11 +21,13 @@ module SoilWaterMainMod
   use RunoffSubSurfaceShallowMmfMod,     only : RunoffSubSurfaceShallowWaterMMF
   use RunoffSubSurfacePeatlandMod,       only : RunoffSubSurfacePeatland
   use MicroTopoCorrectionMod,            only : MicroTopoCorrection
+  use PeatlandPhysicsMod,                only : ApplyPeatlandPhysics
   use SoilWaterDiffusionRichardsMod,     only : SoilWaterDiffusionRichards
   use SoilMoistureSolverMod,             only : SoilMoistureSolver
   use TileDrainageSimpleMod,             only : TileDrainageSimple
   use TileDrainageHooghoudtMod,          only : TileDrainageHooghoudt
   use WaterTableEquilibriumMod,          only : WaterTableEquilibrium
+  use WaterTableEquilibriumPeatMod,      only : WaterTableEquilibriumPeat
 
   implicit none
 
@@ -74,6 +77,7 @@ contains
               FlagUrban              => noahmp%config%domain%FlagUrban              ,& ! in,    logical flag for urban grid
               OptRunoffSurface       => noahmp%config%nmlist%OptRunoffSurface       ,& ! in,    options for surface runoff
               OptRunoffSubsurface    => noahmp%config%nmlist%OptRunoffSubsurface    ,& ! in,    options for subsurface runoff
+              OptPeatlandPhysics     => noahmp%config%nmlist%OptPeatlandPhysics     ,& ! in,    options for peatland physics
               OptTileDrainage        => noahmp%config%nmlist%OptTileDrainage        ,& ! in,    options for tile drainage
               SoilIce                => noahmp%water%state%SoilIce                  ,& ! in,    soil ice content [m3/m3]
               TileDrainFrac          => noahmp%water%state%TileDrainFrac            ,& ! in,    tile drainage map (fraction)
@@ -120,6 +124,10 @@ contains
     InfilRateSfc     = 0.0
     SoilSatExcAcc    = 0.0
     InfilSfcAcc      = 1.0e-06
+    
+    if ( OptPeatlandPhysics == 1 ) then
+            call ApplyPeatlandPhysics(noahmp) 
+    endif
 
     ! for the case when snowmelt water is too large
     do LoopInd1 = 1, NumSoilLayer
@@ -149,11 +157,12 @@ contains
     ! subsurface runoff for runoff scheme option 2
     if ( OptRunoffSubsurface == 2 ) call RunoffSubSurfaceEquiWaterTable(noahmp)
     
-    ! Peatland-specific scheme
+    ! Peatland-specific scheme (Chakraborty et al.,2025)
     if ( OptRunoffSubsurface == 9 ) then
             WaterTableDepthBegin = WaterTableDepth
             call RunoffSubSurfacePeatland(noahmp) 
     endif
+
 
     ! jref impermable surface at urban
     if ( FlagUrban .eqv. .true. ) SoilImpervFrac(1) = 0.95
@@ -171,11 +180,11 @@ contains
     
     ! MB: We add RunoffSurface to the water that needs to infiltrate:
     ! MB: ToDo, test with peat soil properties, currently leading to too high water balance errors
-    !if ( OptRunoffSubsurface == 9 ) then
-    !   InfilRateSfc = InfilRateSfc + RunoffSurface / SoilTimeStep / 1000.0 
-    ! division because units between InfilRateSfc and RunoffSurface differ
-    !   RunoffSurface = 0.0
-    !endif
+    if ( OptPeatlandPhysics == 1 ) then
+       ! NOTE: from RunoffSurface routines, the RunoffSurface is still in m/s same as InfilRateSfc
+       InfilRateSfc = InfilRateSfc + RunoffSurface
+       RunoffSurface = 0.0
+    endif
 
     ! determine iteration times  to solve soil water diffusion and moisture
     NumIterSoilWat = 3
@@ -189,7 +198,8 @@ contains
     DrainSoilBotAcc  = 0.0
     RunoffSurfaceAcc = 0.0
 
-    if ( OptRunoffSubsurface == 9 ) then
+    !if ( OptRunoffSubsurface == 9 ) then
+    if ( OptPeatlandPhysics == 1 ) then
                call MicroTopoCorrection(noahmp) ! to get f_soil
                InfilRateSfc_FSW_change = (1-f_soil)*InfilRateSfc
                InfilRateSfc = f_soil*InfilRateSfc
@@ -208,10 +218,11 @@ contains
           ! division because units between InfilRateSfc and RunoffSurface differ
           !   RunoffSurface = 0.0
           !endif
-          if ( OptRunoffSubsurface == 9 ) then
-               InfilRateSfc_FSW_change = (1-f_soil)*InfilRateSfc
-               InfilRateSfc = f_soil*InfilRateSfc
-          endif
+          !if ( OptRunoffSubsurface == 9 ) then
+          !if ( OptPeatlandPhysics == 1 ) then
+          !     InfilRateSfc_FSW_change = (1-f_soil)*InfilRateSfc
+          !     InfilRateSfc = f_soil*InfilRateSfc
+          !endif
        endif
        
        ! MB: Here the reduced InfilRateSfc will be redistributed as usual
@@ -222,7 +233,8 @@ contains
        RunoffSurfaceAcc = RunoffSurfaceAcc + RunoffSurface
     enddo
 
-    if ( OptRunoffSubsurface == 9 ) then
+    !if ( OptRunoffSubsurface == 9 ) then
+    if ( OptPeatlandPhysics == 1 ) then
                FSW_change = 0.0
                if (f_soil < 0.000001) then
                   WaterTableDepth = WaterTableDepth + EvapGroundNet * SoilTimeStep / AR1 / 1000.0
@@ -261,7 +273,8 @@ contains
     endif
 
     ! MB: also for peatlands, this is the moment to remove the runoff
-    if ( OptRunoffSubsurface == 9 ) then
+    !if ( OptRunoffSubsurface == 9 ) then
+    if ( OptPeatlandPhysics == 1 ) then
        if (f_soil>=0.000001) then
           SoilWatConductAcc = 0.0
           do LoopInd1 = 1, NumSoilLayer
@@ -323,23 +336,37 @@ contains
     endif
     
     ! check if WaterTableDepth dropped back above 0.1 threshold
-    if ( ( WaterTableDepthBegin < 0.1 ) .and. &
-         ( WaterTableDepth > 0.1 ) ) then
-         WaterTableDepthEnd = WaterTableDepth
-         ! remove water that WaterTableEquilibrium call
-         ! yields WaterTableDepth WaterTableDepthEnd
-         call WaterTableEquilibrium(noahmp)
-         do while (WaterTableDepth < WaterTableDepthEnd)
-            SoilLiqWater(1) = SoilLiqWater(1) - 0.0001
-            call WaterTableEquilibrium(noahmp)
-            !print *, "WaterTableDepth ........................... ", WaterTableDepth
-            !print *, "SoilLiqWater ........................... ", SoilLiqWater(1)
-            !Keep track for water balance check
-            FSW_CHANGE =  FSW_CHANGE + 0.0001 * ThicknessSnowSoilLayer(1) * 1000
-         enddo
+    if ( OptPeatlandPhysics == 1 ) then
+        if ( ( WaterTableDepthBegin < 0.1 ) .and. &
+            ( WaterTableDepth > 0.1 ) ) then
+            WaterTableDepthEnd = WaterTableDepth
+            ! remove water that WaterTableEquilibrium call
+            ! yields WaterTableDepth WaterTableDepthEnd
+            call WaterTableEquilibriumPeat(noahmp)
+            do while (WaterTableDepth < WaterTableDepthEnd)
+                LoopInd1 = LoopInd1 + 1
+                if (mod(LoopInd1, 3) .ne. 0) then
+                    SoilLiqWater(1) = SoilLiqWater(1) - 0.0001
+                    FSW_CHANGE =  FSW_CHANGE + 0.0001 * ThicknessSnowSoilLayer(1) * 1000
+                else
+                    SoilLiqWater(2) = SoilLiqWater(2) - 0.0001
+                    FSW_CHANGE =  FSW_CHANGE + 0.0001 * ThicknessSnowSoilLayer(2) * 1000
+                endif
+                call WaterTableEquilibriumPeat(noahmp)
+                !print *, "WaterTableDepthBegin ........................... ", WaterTableDepthBegin
+                !print *, "WaterTableDepth ........................... ", WaterTableDepth
+                !print *, "WaterTableDepthEnd ........................... ", WaterTableDepthEnd
+                !print *, "SoilLiqWater ........................... ", SoilLiqWater(1)
+                !print *, "SoilLiqWater ........................... ", SoilLiqWater(2)
+                !Keep track for water balance check
+                !FSW_CHANGE =  FSW_CHANGE + 0.0001 * ThicknessSnowSoilLayer(1) * 1000
+            enddo
+        endif
     endif
 
-    print *, "WaterTableDepth FINAL", WaterTableDepth
+    if ( OptPeatlandPhysics == 1 ) then
+        !print *, "WaterTableDepth FINAL", WaterTableDepth
+    endif
 
     ! update soil moisture
     do LoopInd2 = 1, NumSoilLayer

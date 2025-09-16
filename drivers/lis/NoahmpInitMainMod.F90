@@ -264,7 +264,7 @@ contains
           NoahmpIO%STEPWTD = nint(NoahmpIO%WTDDT * 60.0 / NoahmpIO%DTBL)
           NoahmpIO%STEPWTD = max(NoahmpIO%STEPWTD,1)
        endif
-
+       
     endif ! NoahmpIO%restart_flag
  
   end subroutine NoahmpInitMain    

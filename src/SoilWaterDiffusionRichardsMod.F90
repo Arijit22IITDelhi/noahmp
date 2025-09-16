@@ -10,6 +10,7 @@ module SoilWaterDiffusionRichardsMod
   use ConstantDefineMod
   use SoilHydraulicPropertyMod
 
+
   implicit none
 
 contains
@@ -48,6 +49,7 @@ contains
               DepthSoilLayer            => noahmp%config%domain%DepthSoilLayer            ,& ! in,  depth [m] of layer-bottom from soil surface
               OptSoilPermeabilityFrozen => noahmp%config%nmlist%OptSoilPermeabilityFrozen ,& ! in,  options for frozen soil permeability
               OptRunoffSubsurface       => noahmp%config%nmlist%OptRunoffSubsurface       ,& ! in,  options for drainage and subsurface runoff
+              OptPeatlandPhysics        => noahmp%config%nmlist%OptPeatlandPhysics        ,& ! in,  options for peatland physics
               SoilDrainSlope            => noahmp%water%param%SoilDrainSlope              ,& ! in,  slope index for soil drainage
               InfilRateSfc              => noahmp%water%flux%InfilRateSfc                 ,& ! in,  infiltration rate at surface [m/s]
               EvapSoilSfcLiqMean        => noahmp%water%flux%EvapSoilSfcLiqMean           ,& ! in,  mean evaporation from soil surface [m/s]
@@ -113,12 +115,13 @@ contains
           SoilWaterGrad(LoopInd)    = 2.0 * (SoilMoistureTmp(LoopInd)-SoilMoistureTmp(LoopInd+1)) / DepthSnowSoilTmp
           WaterExcess(LoopInd)      = SoilWatDiffusivity(LoopInd)*SoilWaterGrad(LoopInd) + SoilWatConductivity(LoopInd) - &
                                       InfilRateSfc + TranspWatLossSoilMean(LoopInd) + EvapSoilSfcLiqMean
-          if (OptRunoffSubsurface == 9) then
+          !if (OptRunoffSubsurface == 9) then
+          if ( OptPeatlandPhysics == 1 ) then
              if (f_soil < 0.000001) then
                 WaterExcess(LoopInd) = 0.0
              else
                 WaterExcess(LoopInd)      = SoilWatDiffusivity(LoopInd)*SoilWaterGrad(LoopInd) + SoilWatConductivity(LoopInd) - &
-                                            InfilRateSfc + TranspWatLossSoilMean(LoopInd) + f_soil*EvapSoilSfcLiqMean
+                                            InfilRateSfc + f_soil*TranspWatLossSoilMean(LoopInd) + f_soil*EvapSoilSfcLiqMean
              endif
           endif
        else if ( LoopInd < NumSoilLayer ) then
@@ -129,7 +132,8 @@ contains
           WaterExcess(LoopInd)      = SoilWatDiffusivity(LoopInd)*SoilWaterGrad(LoopInd) + SoilWatConductivity(LoopInd) - &
                                       SoilWatDiffusivity(LoopInd-1)*SoilWaterGrad(LoopInd-1) - SoilWatConductivity(LoopInd-1) + &
                                       TranspWatLossSoilMean(LoopInd)
-          if (OptRunoffSubsurface == 9) then
+          !if (OptRunoffSubsurface == 9) then
+          if ( OptPeatlandPhysics == 1 ) then
              if (f_soil < 0.000001) then
                 WaterExcess(LoopInd) = 0.0
              else
@@ -142,7 +146,8 @@ contains
           SoilThickTmp(LoopInd) = (DepthSoilLayer(LoopInd-1) - DepthSoilLayer(LoopInd))
           ! MB: For peatlands we don't want to lose water through the bottom ... instead it should raise the water level
           ! using the equilibrium approach that is also used in RunoffSubsurfaceOption 2
-          if ( (OptRunoffSubsurface == 1) .or. (OptRunoffSubsurface == 2) .or. (OptRunoffSubsurface == 9)) then
+          !if ( (OptRunoffSubsurface == 1) .or. (OptRunoffSubsurface == 2) .or. (OptRunoffSubsurface == 9)) then
+          if ( (OptRunoffSubsurface == 1) .or. (OptRunoffSubsurface == 2) .or. (OptPeatlandPhysics == 1)) then
              DrainSoilBot = 0.0
           endif
           if ( (OptRunoffSubsurface == 3) .or. (OptRunoffSubsurface == 6) .or. &
@@ -167,7 +172,8 @@ contains
           endif
           WaterExcess(LoopInd) = -(SoilWatDiffusivity(LoopInd-1)*SoilWaterGrad(LoopInd-1)) - SoilWatConductivity(LoopInd-1) + &
                                  TranspWatLossSoilMean(LoopInd) + DrainSoilBot
-          if (OptRunoffSubsurface == 9) then
+          !if (OptRunoffSubsurface == 9) then
+          if ( OptPeatlandPhysics == 1 ) then
              if (f_soil < 0.000001) then
                 WaterExcess(LoopInd) = 0.0
              else
