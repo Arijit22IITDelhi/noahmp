@@ -23,7 +23,11 @@ contains
     
     type(noahmp_type), intent(inout) :: noahmp
 
+<<<<<<< HEAD
     integer, parameter               :: NumSoilFineLy = 1000
+=======
+    integer, parameter               :: NumSoilFineLy = 4000
+>>>>>>> 7ebd6a4 (Updated peat branch)
     integer                          :: i, iter
     real(kind=kind_noahmp)           :: dz_fine, zmax
     real(kind=kind_noahmp)           :: deficit_target, deficit_mid
@@ -32,6 +36,10 @@ contains
     real(kind=kind_noahmp), parameter:: tol_def  = 1.0e-6_kind_noahmp
     real(kind=kind_noahmp), parameter:: tol_zwt  = 1.0e-4_kind_noahmp
     integer,          parameter      :: max_iter = 60
+<<<<<<< HEAD
+=======
+    real(kind=kind_noahmp), parameter:: WaterTableDepthMinPeat = -0.2449
+>>>>>>> 7ebd6a4 (Updated peat branch)
     real(kind=kind_noahmp)           :: z, psi_abs, theta_z, deficit_acc  ! (z, theta_z, deficit_acc not strictly needed here)
 ! -----------------------------------------------------------------------------------------------------------------------------
     associate(                                                                        &
@@ -98,6 +106,11 @@ contains
           end if
         end if
       end if
+<<<<<<< HEAD
+=======
+      
+    WaterTableDepth = max(WaterTableDepth, WaterTableDepthMinPeat)
+>>>>>>> 7ebd6a4 (Updated peat branch)
 
     end associate
 

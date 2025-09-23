@@ -62,6 +62,7 @@ contains
     real(kind=kind_noahmp)            :: InfilRateSfc_FSW_change                  !
     real(kind=kind_noahmp)            :: WaterTableDepthBegin                  !
     real(kind=kind_noahmp)            :: WaterTableDepthEnd                  !
+    real(kind=kind_noahmp), parameter :: WaterTableDepthMinPeat = -0.2449
     real(kind=kind_noahmp), parameter :: SoilImpPara = 4.0            ! soil impervious fraction parameter
     real(kind=kind_noahmp), allocatable, dimension(:) :: MatRight     ! right-hand side term of the matrix
     real(kind=kind_noahmp), allocatable, dimension(:) :: MatLeft1     ! left-hand side term
@@ -166,6 +167,8 @@ contains
 
     ! jref impermable surface at urban
     if ( FlagUrban .eqv. .true. ) SoilImpervFrac(1) = 0.95
+    
+    WaterTableDepth = max(WaterTableDepth, WaterTableDepthMinPeat)
 
     ! surface runoff and infiltration rate using different schemes
     ! MB: Alternative idea which will produce the same output as PEATCLSM: 
