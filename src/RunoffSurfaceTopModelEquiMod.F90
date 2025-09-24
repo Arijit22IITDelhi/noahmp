@@ -37,15 +37,6 @@ contains
 
     ! set up key parameter
     RunoffDecayFac = 2.0
-    
-    ! debug print
-<<<<<<< HEAD
-    write(*,*) 'DEBUG: RunoffDecayFac = ', RunoffDecayFac, &
-                ' WaterTableDepth = ', WaterTableDepth
-=======
-    write(*,*) 'DEBUG: WaterTableDepth = ', WaterTableDepth, &
-                ' SoilSfcSatFracMax = ', SoilSfcSatFracMax
->>>>>>> 7ebd6a4 (Updated peat branch)
 
     ! compute saturated area fraction
     SoilSaturateFrac = SoilSfcSatFracMax * exp(-0.5 * RunoffDecayFac * WaterTableDepth)
