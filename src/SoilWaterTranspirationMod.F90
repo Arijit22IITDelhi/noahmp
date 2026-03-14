@@ -19,7 +19,7 @@ contains
 ! Original Noah-MP subroutine: None (embedded in ENERGY subroutine)
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactored code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
-! Modified for Peatland transpiration and waterlogging stress: Chakraborty & Bechtold (2025)
+! Modified for Peatland transpiration and waterlogging stress (Chakraborty et al. 2026)
 ! -------------------------------------------------------------------------
 
     implicit none
@@ -31,8 +31,8 @@ contains
     integer                          :: IndSoil       ! loop index
     real(kind=kind_noahmp)           :: SoilWetFac    ! temporary variable
     real(kind=kind_noahmp)           :: MinThr        ! minimum threshold to prevent division by zero
-    real(kind=kind_noahmp)           :: F_wilt        ! PEAT-CLSM wilting stress based on WTD
-    real(kind=kind_noahmp)           :: F_log         ! PEAT-CLSM waterlogging stress factor (FOXY)
+    real(kind=kind_noahmp)           :: F_wilt        ! PEAT wilting stress based on WTD
+    real(kind=kind_noahmp)           :: F_log         ! PEAT waterlogging stress factor (FOXY)
 
 ! --------------------------------------------------------------------
     associate(                                                                             &
@@ -60,8 +60,7 @@ contains
     MinThr         = 1.0e-6
     SoilTranspFacAcc = 0.0
 
-    ! Set peatland-specific transpiration option if runoff option is PEAT
-    !if (OptRunoffSubsurface == 9) then
+    ! Set peatland-specific transpiration option if peatland physics is enabled
     if ( OptPeatlandPhysics == 1 ) then
        OptSoilWaterTranspiration = 4
     endif
@@ -86,8 +85,7 @@ contains
                                             (-SoilExpCoeffB(IndSoil)))
              SoilWetFac = 1.0 - exp(-5.8*(log(SoilMatPotentialWilt/SoilMatPotential(IndSoil))))
 
-          else if ( OptSoilWaterTranspiration == 4 ) then  ! PEAT-CLSM (drought + waterlogging stress)
-             ! Bechtold et al. (2019) uses negative WTD below ground, Noah-MP uses positive
+          else if ( OptSoilWaterTranspiration == 4 ) then  ! PEAT (drought + waterlogging stress)
              if (WaterTableDepth < 0.3) then
                 F_wilt = 0.0
              else if (WaterTableDepth >= 0.3 .and. WaterTableDepth < 1.15) then
@@ -97,12 +95,15 @@ contains
              end if
              F_wilt = max(0.0, min(1.0, F_wilt))
 
-             ! Apply waterlogging stress based only on WTD (no porosity condition)
-             if (WaterTableDepth < 0.29) then
+             ! Apply waterlogging stress based only on WaterTableDepth
+             if (WaterTableDepth >= 0.29) then
+                F_log = 1.0
+             else if (WaterTableDepth >= -0.35 .and. WaterTableDepth < 0.29) then
                 F_log = 1.0 - max(0.0, min(0.95, (0.29 - WaterTableDepth) / 0.64))
              else
-                F_log = 1.0
+                F_log = 0.0
              end if
+             F_log = max(0.0, min(1.0, F_log))
 
              ! Combine both drought and waterlogging stress factors
              SoilWetFac = (1.0 - F_wilt) * F_log
