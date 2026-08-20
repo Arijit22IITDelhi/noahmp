@@ -2,6 +2,7 @@
 ! Original Table: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Updated Table: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
 ! Updated table reformats and merges original MPTABLE.TBL, SOILPARM.TBL, GENPARM.TBL
+! Added peat soil class as 17-PEAT: A. Chakraborty & M. Bechtold (2025)
 ! ----------------------------------------------------------------------------------
 
 &noahmp_usgs_veg_categories
@@ -748,7 +749,7 @@
 /
 
 &noahmp_soil_stas_parameters
- ! 19 total soil types considered by NoahMP, Now 20, 17-> PEAT (Chakraborty et al., 2025)
+ ! 19 total soil types considered by NoahMP, Now 20, 17-> PEAT (A. Chakraborty, 2025)
  !  1: SAND
  !  2: LOAMY SAND
  !  3: SANDY LOAM

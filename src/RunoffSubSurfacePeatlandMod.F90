@@ -1,12 +1,9 @@
 module RunoffSubSurfacePeatlandMod
 
 !!! Calculate subsurface runoff using Ivanov-based Peatland Runoff Scheme
-!!! Introduced by Chakraborty & Bechtold (2025), WTD equilibrium revised by Bechtold (2026)
-!!!
-!!! Note: WaterTableDepth is diagnosed by FindWaterTable (microtopo-aware
-!!! bisection on SoilWaterStorageMicroTopoLite) in SoilWaterMainMod before
-!!! this subroutine is called.  The diagnosed WTD accounts for the
-!!! Gaussian microtopography distribution of Dettmann & Bechtold (2015).
+!!! Introduced by A. Chakraborty & M. Bechtold (2025), WTD equilibrium revised by M. Bechtold (2026)
+!!! Note: WaterTableDepth is diagnosed by FindWaterTable (microtopo-aware bisection on SoilWaterStorageMicroTopoLite) in SoilWaterMainMod before this subroutine is called.  
+!!! The diagnosed WTD accounts for the Gaussian microtopography distribution of Dettmann & Bechtold (2015).
 
   use Machine
   use NoahmpVarType
@@ -19,7 +16,8 @@ contains
   subroutine RunoffSubSurfacePeatland(noahmp)
 
 ! ------------------------ Code history --------------------------------------------------
-! Peatland-specific Ivanov-based runoff scheme (Chakraborty & Bechtold, 2025; revised Bechtold, 2026)
+! Peatland-specific Ivanov-based runoff scheme: A. Chakraborty & M. Bechtold, (2025) 
+! Revised: M. Bechtold, (2026)
 ! ----------------------------------------------------------------------------------------
 
     implicit none
@@ -45,9 +43,9 @@ contains
     ! WaterTableDepth is diagnosed by FindWaterTable in SoilWaterMainMod
     ! (microtopo-aware bisection) before this subroutine is called.
 
-    ! ------------------------------------------
-    ! Option 9: Ivanov-based Peatland Runoff Scheme (Chakraborty & Bechtold, 2025)
-    ! ------------------------------------------
+    ! ----------------------------------------------------------------------------------
+    ! Option 9: Ivanov-based Peatland Runoff Scheme (A. Chakraborty & M. Bechtold, 2025)
+    ! ----------------------------------------------------------------------------------
 
     ! Assign parameter values for peatland runoff scheme
     Ksz_zero = 3165.38_dp      ! Saturated hydraulic conductivity [m^2/s]
@@ -68,7 +66,7 @@ contains
     !RunoffSubsurface = min(0.0002,RunoffSubSurface)
     RunoffSubsurface = min(0.005,RunoffSubSurface)
     
-    ! FSW_change is now computed in SoilWaterMainMod from WTD diagnosis (Bechtold, 2026)
+    ! FSW_change is now computed in SoilWaterMainMod from WTD diagnosis (M. Bechtold, 2026)
 
     end associate
 

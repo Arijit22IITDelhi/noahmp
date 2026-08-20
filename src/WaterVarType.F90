@@ -3,10 +3,11 @@ module WaterVarType
 !!! Define column (1-D) Noah-MP Water variables
 !!! Water variable initialization is done in WaterVarInitMod.F90
 
-! ------------------------ Code history -----------------------------------
+! ------------------------ Code history ----------------------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
-! -------------------------------------------------------------------------
+! Added peatland numerical water balance error: A. Chakraborty and M. Bechtold, (2025)
+! ------------------------------------------------------------------------------------
 
   use Machine
 

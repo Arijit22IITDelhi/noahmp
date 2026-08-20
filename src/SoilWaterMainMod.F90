@@ -2,7 +2,7 @@ module SoilWaterMainMod
 
 !!! Main soil water module including all soil water processes & update soil moisture
 !!! surface runoff, infiltration, soil water diffusion, subsurface runoff, tile drainage
-!!! Peatland-specific options (Chakraborty et al., 2025; revised Bechtold, 2026)
+!!! Peatland-specific options added by A. Chakraborty & M. Bechtold, (2025); revised by M. Bechtold (2026)
 
   use Machine
   use NoahmpVarType
@@ -47,7 +47,7 @@ contains
 ! Original Noah-MP subroutine: SOILWATER
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
-! Option=9; Peatland runoff scheme (Chakraborty & Bechtold, 2025; revised Bechtold, 2026)
+! Peatland runoff scheme: added by A. Chakraborty & M. Bechtold, 2025; revised by M. Bechtold, 2026)
 ! -------------------------------------------------------------------------
 
     implicit none
@@ -225,7 +225,7 @@ contains
     ! Use stored WaterTableDepth directly (from restart or previous
     ! timestep) rather than re-diagnosing from soil water alone.
     ! This ensures cross-timestep consistency of combined
-    ! soil + surface water tracking.  (Bechtold, 2026)
+    ! soil + surface water tracking.  (added by M. Bechtold, 2026)
     ! ================================================================
     if ( OptPeatlandPhysics == 1 ) then
        thetas_peat    = SoilMoistureSat(1)
@@ -297,7 +297,7 @@ contains
     if ( FlagUrban .eqv. .true. ) SoilImpervFrac(1) = 0.95
 
     ! ================================================================
-    ! Peatland: Two-regime algorithm (Bechtold, 2026)
+    ! Peatland: Two-regime algorithm (M. Bechtold, 2026)
     ! Equilibrium bypass for WTD < 0.3 m, Richards path for WTD >= 0.3 m
     ! ================================================================
     if ( OptPeatlandPhysics == 1 ) then

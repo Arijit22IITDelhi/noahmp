@@ -1,7 +1,7 @@
 module PeatlandPhysicsMod
 
 !!! Specifies peatland physical processes specific options
-!!! Introduced by Chakraborty et al., (2025)
+!!! Introduced by A. Chakraborty (2025)
 
   use Machine
   use NoahmpVarType
@@ -14,7 +14,7 @@ contains
   subroutine ApplyPeatlandPhysics(noahmp)
   
 ! ------------------------ Code history --------------------------------------------------
-! Turning on peatland physical processes (Chakraborty & Bechtold, 2025)
+! Turning on peatland physical processes A. Chakraborty & M. Bechtold, (2025)
 ! ----------------------------------------------------------------------------------------
 
     implicit none

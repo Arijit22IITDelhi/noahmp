@@ -14,12 +14,12 @@ contains
  
   subroutine SoilWaterTranspiration(noahmp)
  
-! ------------------------ Code history -----------------------------------
+! ------------------------ Code history ------------------------------------------------------------------------------------------
 ! Original Noah-MP subroutine: None (embedded in ENERGY subroutine)
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
-! Modified for Peatland transpiration and waterlogging stress (Chakraborty et al. 2026)
-! -------------------------------------------------------------------------
+! Modified for Peatland transpiration and waterlogging stress: A. Chakraborty & M. Bechtold (2025), revised: A. Chakraborty (2026)
+! --------------------------------------------------------------------------------------------------------------------------------
  
     implicit none
  
@@ -104,11 +104,9 @@ contains
              end if
              F_wilt = max(0.0, min(1.0, F_wilt))
  
-             !------------------------Separate block added for option 4------------------------------
              ! Convert drought stress severity to transpiration reduction factor
              BetaDrought = 1.0 - F_wilt
              BetaDrought = max(0.0, min(1.0, BetaDrought))
-             !----------------------------------End Block---------------------------------------------
  
              ! Waterlogging reduction factor: 1 = no stress, 0 = full stress
              if (WaterTableDepth >= 0.29) then
@@ -119,16 +117,7 @@ contains
                 F_log = 0.0
              end if
              F_log = max(0.0, min(1.0, F_log))
-             ! Combine both drought and waterlogging stress factors
-             !SoilWetFac = (1.0 - F_wilt) * F_log
-         !endif
-         !SoilWetFac = min(1.0, max(0.0, SoilWetFac))
  
-         !SoilTranspFac(IndSoil) = max(MinThr, ThicknessSnowSoilLayer(IndSoil) / &
-         !                              (-DepthSoilLayer(NumSoilLayerRoot)) * SoilWetFac)
-         !SoilTranspFacAcc = SoilTranspFacAcc + SoilTranspFac(IndSoil)
- 
-             !------------------------Separate block added for option 4------------------------------
              BetaWaterlog = F_log
  
              ! Final combined peatland stress factor
@@ -148,15 +137,14 @@ contains
                                                (-DepthSoilLayer(NumSoilLayerRoot)) * SoilWetFac)
              SoilTranspFacAcc             = SoilTranspFacAcc + SoilTranspFac(IndSoil)
           endif
-         !----------------------------------End Block---------------------------------------------
+
        enddo
-       !------------------------Separate block added for option 4------------------------------
+       
        if ( OptSoilWaterTranspiration == 4 ) then
           SoilTranspFacAcc = BetaPeat
           RootFracSum = max(MinThr, RootFracSum)
           SoilTranspFac(1:NumSoilLayerRoot) = SoilTranspFac(1:NumSoilLayerRoot) / RootFracSum
        else
-       !----------------------------------End Block---------------------------------------------
           SoilTranspFacAcc = max(MinThr, SoilTranspFacAcc)
           SoilTranspFac(1:NumSoilLayerRoot) = SoilTranspFac(1:NumSoilLayerRoot) / SoilTranspFacAcc
        endif

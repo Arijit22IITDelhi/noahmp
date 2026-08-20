@@ -17,6 +17,7 @@ contains
 ! Original Noah-MP subroutine: None (embedded in NOAHMP_SFLX)
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! Added peatland specifics: A. Chakraborty & M. Bechtold, (2025)
 ! -------------------------------------------------------------------------
 
     implicit none

@@ -7,6 +7,7 @@ module ConfigVarInTransferMod
 ! ------------------------ Code history -----------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! Peat var type added: A. Chakraborty and M. Bechtold (2025)
 ! -------------------------------------------------------------------------
 
   use Machine
@@ -58,7 +59,7 @@ contains
     noahmp%config%nmlist%OptPedotransfer             = NoahmpIO%IOPT_PEDO
     noahmp%config%nmlist%OptRunoffSurface            = NoahmpIO%IOPT_RUNSRF
     noahmp%config%nmlist%OptRunoffSubsurface         = NoahmpIO%IOPT_RUNSUB
-    noahmp%config%nmlist%OptPeatlandPhysics          = NoahmpIO%IOPT_PEAT      ! Chakraborty et al., (2025)
+    noahmp%config%nmlist%OptPeatlandPhysics          = NoahmpIO%IOPT_PEAT      
     noahmp%config%nmlist%OptGlacierTreatment         = NoahmpIO%IOPT_GLA
     noahmp%config%nmlist%OptSnowCompaction           = NoahmpIO%IOPT_COMPACT
 

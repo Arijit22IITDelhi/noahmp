@@ -21,6 +21,7 @@ contains
 ! Original Noah-MP subroutine: SRT
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! Added peatland specifics: A. Chakraborty & M. Bechtold (2025), Revised: M. Bechtold (2026)
 ! ----------------------------------------------------------------------------------------
 
     implicit none
@@ -112,7 +113,7 @@ contains
           SoilMoistTmpToWT = SoilMoistureToWT * SoilLiqWater(NumSoilLayer) / SoilMoisture(NumSoilLayer)  !same liquid fraction as in the bottom layer
     endif
 
-    ! Peatland: compute suction heads for head-based flux formulation
+    ! Peatland: compute suction heads for head-based flux formulation, added by M. Bechtold (2026)
     ! h_i = ae * (theta_i / theta_s)^(-b)
     ! This eliminates the discretisation-error flux at hydrostatic equilibrium
     ! that arises from D*d(theta)/dz + K with layers of unequal thickness.
@@ -136,7 +137,6 @@ contains
           SoilWaterGrad(LoopInd)    = 2.0 * (SoilMoistureTmp(LoopInd)-SoilMoistureTmp(LoopInd+1)) / DepthSnowSoilTmp
           WaterExcess(LoopInd)      = SoilWatDiffusivity(LoopInd)*SoilWaterGrad(LoopInd) + SoilWatConductivity(LoopInd) - &
                                       InfilRateSfc + TranspWatLossSoilMean(LoopInd) + EvapSoilSfcLiqMean
-          !if (OptRunoffSubsurface == 9) then
           if ( OptPeatlandPhysics == 1 ) then
              SoilHeadGrad(LoopInd) = 2.0 * (SoilSuction(LoopInd+1) - SoilSuction(LoopInd)) / DepthSnowSoilTmp
              if (f_soil < 0.000001) then
@@ -154,7 +154,6 @@ contains
           WaterExcess(LoopInd)      = SoilWatDiffusivity(LoopInd)*SoilWaterGrad(LoopInd) + SoilWatConductivity(LoopInd) - &
                                       SoilWatDiffusivity(LoopInd-1)*SoilWaterGrad(LoopInd-1) - SoilWatConductivity(LoopInd-1) + &
                                       TranspWatLossSoilMean(LoopInd)
-          !if (OptRunoffSubsurface == 9) then
           if ( OptPeatlandPhysics == 1 ) then
              SoilHeadGrad(LoopInd) = 2.0 * (SoilSuction(LoopInd+1) - SoilSuction(LoopInd)) / DepthSnowSoilTmp
              if (f_soil < 0.000001) then
@@ -167,9 +166,8 @@ contains
           endif
        else
           SoilThickTmp(LoopInd) = (DepthSoilLayer(LoopInd-1) - DepthSoilLayer(LoopInd))
-          ! MB: For peatlands we don't want to lose water through the bottom ... instead it should raise the water level
+          ! For peatlands we don't want to lose water through the bottom ... instead it should raise the water level (M. Bechtold, 2026)
           ! using the equilibrium approach that is also used in RunoffSubsurfaceOption 2
-          !if ( (OptRunoffSubsurface == 1) .or. (OptRunoffSubsurface == 2) .or. (OptRunoffSubsurface == 9)) then
           if ( (OptRunoffSubsurface == 1) .or. (OptRunoffSubsurface == 2) .or. (OptPeatlandPhysics == 1)) then
              DrainSoilBot = 0.0
           endif
@@ -195,7 +193,6 @@ contains
           endif
           WaterExcess(LoopInd) = -(SoilWatDiffusivity(LoopInd-1)*SoilWaterGrad(LoopInd-1)) - SoilWatConductivity(LoopInd-1) + &
                                  TranspWatLossSoilMean(LoopInd) + DrainSoilBot
-          !if (OptRunoffSubsurface == 9) then
           if ( OptPeatlandPhysics == 1 ) then
              if (f_soil < 0.000001) then
                 WaterExcess(LoopInd) = 0.0

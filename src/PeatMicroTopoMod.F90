@@ -29,7 +29,7 @@ module PeatMicroTopoMod
 !!!   where h = pressure head (negative in unsaturated zone, h = z_wt - z for hydrostatic)
 !!!         h_e = air-entry suction head (positive value, = abs(SoilMatPotentialSat))
 !!!         b   = Campbell exponent (SoilExpCoeffB)
-!!!
+!!! Original: M. Bechtold (2026)
 !!! Reference: Dettmann & Bechtold (2015), Hydrological Processes
 
   use Machine

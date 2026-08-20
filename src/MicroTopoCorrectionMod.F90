@@ -9,8 +9,8 @@ module MicroTopoCorrectionMod
 !!!   - f_soil: fraction of fluxes going to soil (from Sy decomposition)
 !!!   - SySoilLocal / SySurfLocal: local specific yield components
 !!!
-!!! Introduced by Chakraborty & Bechtold (2025), revised with Dettmann & Bechtold (2015)
-!!! microtopography theory by Bechtold (2026)
+!!! Introduced by A. Chakraborty & M. Bechtold (2025), revised with Dettmann & Bechtold (2015)
+!!! microtopography theory by M. Bechtold (2026)
 
   use Machine
   use NoahmpVarType
@@ -26,8 +26,8 @@ contains
   subroutine MicroTopoCorrection(noahmp)
 
 ! ------------------------ Code history --------------------------------------------------
-! Original: Specific yield from WaterTableDepth (Chakraborty & Bechtold, 2025)
-! Revised:  Dettmann & Bechtold (2015) Gaussian microtopography physics (Bechtold, 2026)
+! Original: Specific yield from WaterTableDepth by A. Chakraborty & M. Bechtold, (2025)
+! Revised:  Dettmann & Bechtold (2015) Gaussian microtopography physics by M. Bechtold, (2026)
 ! ----------------------------------------------------------------------------------------
 
     implicit none

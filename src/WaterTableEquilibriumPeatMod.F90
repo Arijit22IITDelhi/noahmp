@@ -35,7 +35,7 @@ contains
 ! Original Noah-MP subroutine: ZWTEQ
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactored:    C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
-! This version:  Microtopography-consistent deficit bisection (Bechtold, 2026)
+! This version:  Microtopography-consistent deficit bisection by M. Bechtold, (2026)
 !                Both deficit_target and equilibrium function use the same
 !                spatial domain: hummock zone + microtopo zone + deep zone
 ! ----------------------------------------------------------------------------------------

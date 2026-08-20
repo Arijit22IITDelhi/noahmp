@@ -6,6 +6,7 @@ module WaterVarInitMod
 ! ------------------------ Code history -----------------------------------
 ! Original code: Guo-Yue Niu and Noah-MP team (Niu et al. 2011)
 ! Refactered code: C. He, P. Valayamkunnath, & refactor team (He et al. 2023)
+! Added peatland specifics: A. Chakraborty and M. Bechtold, (2025)
 ! -------------------------------------------------------------------------
 
   use Machine
