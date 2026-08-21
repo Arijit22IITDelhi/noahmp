@@ -61,7 +61,6 @@ OBJS = ConstantDefineMod.o \
        WaterMainMod.o \
        WaterTableDepthSearchMod.o \
        WaterTableEquilibriumMod.o \
-       WaterTableEquilibriumPeatMod.o \
        IrrigationTriggerMod.o \
        IrrigationSprinklerMod.o \
        CanopyWaterInterceptMod.o \
@@ -251,8 +250,6 @@ WaterMainMod.o:                       ../utility/Machine.o NoahmpVarType.o Const
                                       IrrigationMicroMod.o SoilWaterMainMod.o
 WaterTableDepthSearchMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 WaterTableEquilibriumMod.o:           ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
-WaterTableEquilibriumPeatMod.o:       ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o \
-                                      PeatMicroTopoMod.o
 IrrigationTriggerMod.o:               ../utility/Machine.o NoahmpVarType.o ConstantDefineMod.o
 IrrigationSprinklerMod.o:             ../utility/Machine.o ../utility/CheckNanMod.o \
                                       NoahmpVarType.o ConstantDefineMod.o IrrigationInfilPhilipMod.o
